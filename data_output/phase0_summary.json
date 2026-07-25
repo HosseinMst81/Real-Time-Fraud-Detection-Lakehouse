@@ -1,0 +1,8 @@
+{
+  "total_rows": 284807,
+  "total_cols": 31,
+  "missing_count": 0,
+  "legit_count": 284315,
+  "fraud_count": 492,
+  "fraud_percentage": 0.1727
+}
