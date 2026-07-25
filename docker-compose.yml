@@ -5,7 +5,7 @@ services:
   # 1. MINIO (S3-Compatible Object Storage for Delta Lake)
   # ===========================================================================
   minio:
-    image: minio/minio:RELEASE.2024-01-31T20-20-31Z
+    image: minio/minio:latest
     container_name: minio_lakehouse
     ports:
       - "9000:9000"
@@ -22,7 +22,7 @@ services:
 
   # MinIO Bucket Auto-Creator
   minio-init:
-    image: minio/mc:RELEASE.2024-01-28T16-17-48Z
+    image: minio/mc:latest
     container_name: minio_init_bucket
     depends_on:
       minio:
@@ -76,7 +76,7 @@ services:
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
 
   schema-registry:
-    image: confluentinc/cp-schema-registry:7.5.3
+    image: confluentinc/cp-schema-registry:7.6.0
     container_name: schema_registry_lakehouse
     ports:
       - "8081:8081"
@@ -107,7 +107,7 @@ services:
     image: bitnami/spark:3.5.0
     container_name: spark_worker_lakehouse
     ports:
-      - "8081:8081"
+      - "8082:8081"
     depends_on:
       - spark-master
     environment:
