@@ -1,8 +1,10 @@
+#!/usr/bin/env python3
 """
 ===============================================================================
 Phase 1: Lakehouse Layer & Delta Lake Setup
 Real-Time Fraud Detection Lakehouse Pipeline
 ===============================================================================
+Author: Senior Big Data Specialist
 
 This script initializes the Lakehouse storage layer on MinIO (S3 compatible) using
 Delta Lake format. It executes and validates all mandatory Phase 1 capabilities:
@@ -230,8 +232,36 @@ def main():
         test_schema_enforcement(spark, delta_path)
         test_schema_evolution(spark, delta_path)
         test_optimize_and_vacuum(spark, delta_path)
+        
+        # Save summary to ./data_output
+        output_dir = "./data_output"
+        os.makedirs(output_dir, exist_ok=True)
+        summary_info = {
+            "phase": "Phase 1 - Lakehouse MinIO Delta Storage",
+            "delta_table_path": delta_path,
+            "tests_executed": [
+                "Initial Delta Write to MinIO",
+                "Time Travel & Historical Versioning",
+                "Schema Enforcement Validation",
+                "Schema Evolution (MergeSchema)",
+                "Delta OPTIMIZE (Z-ORDER BY Amount) & VACUUM"
+            ],
+            "status": "PASSED",
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        summary_path = os.path.join(output_dir, "phase1_lakehouse_summary.json")
+        log_path = os.path.join(output_dir, "phase1_lakehouse.log")
+        
+        with open(summary_path, "w", encoding="utf-8") as f:
+            json.dump(summary_info, f, indent=2)
+            
+        with open(log_path, "a", encoding="utf-8") as f:
+            f.write(f"[{summary_info['timestamp']}] Delta Path: {delta_path} | Status: PASSED\n")
+            
         print("\n" + "="*80)
         print(" [PASSED] ALL PHASE 1 LAKEHOUSE LAYER TESTS COMPLETED SUCCESSFULLY!")
+        print(f" Saved Summary: {summary_path}")
+        print(f" Saved Log:     {log_path}")
         print("="*80)
     finally:
         spark.stop()

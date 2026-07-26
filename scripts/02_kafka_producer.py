@@ -3,7 +3,6 @@
 Phase 2: High-Throughput Kafka Producer with Wall-Clock Timestamping
 Real-Time Fraud Detection Lakehouse Pipeline
 ===============================================================================
-Author: Senior Big Data Specialist
 
 This script reads preprocessed credit card transaction records and streams them to an
 Apache Kafka topic ('creditcard-transactions') at a controlled rate (e.g., 10 TPS or 40 TPS).
@@ -259,11 +258,47 @@ def stream_transactions_to_kafka(
         producer.flush()
         producer.close()
         total_time = time.time() - start_time
+        avg_tps = sent_count / total_time if total_time > 0 else 0
+        
+        summary_info = {
+            "phase": "Phase 2 - Data Ingestion (Kafka Producer)",
+            "topic": topic_name,
+            "target_tps": target_tps,
+            "bootstrap_servers": bootstrap_servers,
+            "schema_registry_url": schema_registry_url,
+            "sent_records": sent_count,
+            "total_records": total_records,
+            "duration_seconds": round(total_time, 2),
+            "actual_avg_tps": round(avg_tps, 2),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "status": "COMPLETED"
+        }
+        
+        # Save execution log and summary json to ./data_output and ./phase2_summary.json
+        output_dir = "./data_output"
+        os.makedirs(output_dir, exist_ok=True)
+        summary_path = os.path.join(output_dir, "phase2_kafka_producer_summary.json")
+        root_summary_path = "./phase2_summary.json"
+        log_path = os.path.join(output_dir, "phase2_kafka_producer.log")
+        
+        with open(summary_path, "w", encoding="utf-8") as f:
+            json.dump(summary_info, f, indent=2)
+            
+        with open(root_summary_path, "w", encoding="utf-8") as f:
+            json.dump(summary_info, f, indent=2)
+            
+        log_entry = f"[{summary_info['timestamp']}] Topic: {topic_name} | Sent: {sent_count}/{total_records} | Target TPS: {target_tps} | Actual TPS: {round(avg_tps, 2)} | Duration: {round(total_time, 2)}s\n"
+        with open(log_path, "a", encoding="utf-8") as f:
+            f.write(log_entry)
+            
         print("\n" + "="*80)
         print(f" PRODUCER STREAMING COMPLETED")
         print(f" Sent Records: {sent_count:,}")
         print(f" Duration:     {total_time:.2f} seconds")
-        print(f" Average TPS:  {sent_count / total_time if total_time > 0 else 0:.2f} TPS")
+        print(f" Average TPS:  {avg_tps:.2f} TPS")
+        print(f" Saved Summary (Volume): {summary_path}")
+        print(f" Saved Summary (Root):   {root_summary_path}")
+        print(f" Saved Log:              {log_path}")
         print("="*80 + "\n")
 
 def main():
@@ -278,6 +313,7 @@ def main():
     parser.add_argument("--bootstrap", type=str, default=default_bootstrap, help="Kafka bootstrap servers")
     parser.add_argument("--schema_registry", type=str, default=default_schema_reg, help="Confluent Schema Registry URL")
     parser.add_argument("--max_records", type=int, default=100, help="Maximum records to stream (None for all)")
+    parser.add_argument("--report", action="store_true", help="Generate summary JSON & execution logs")
     
     args = parser.parse_args()
     stream_transactions_to_kafka(
