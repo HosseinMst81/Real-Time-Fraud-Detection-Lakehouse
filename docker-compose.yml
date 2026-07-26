@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # ===========================================================================
   # 1. MINIO (S3-Compatible Object Storage for Delta Lake)
@@ -93,9 +91,12 @@ services:
   spark-master:
     image: bitnami/spark:3.5.0
     container_name: spark_master_lakehouse
+    working_dir: /app
     ports:
       - "8080:8080"
       - "7077:7077"
+    volumes:
+      - .:/app
     environment:
       - SPARK_MODE=master
       - SPARK_RPC_AUTHENTICATION_ENABLED=no
@@ -106,8 +107,11 @@ services:
   spark-worker:
     image: bitnami/spark:3.5.0
     container_name: spark_worker_lakehouse
+    working_dir: /app
     ports:
       - "8082:8081"
+    volumes:
+      - .:/app
     depends_on:
       - spark-master
     environment:
