@@ -1,0 +1,153 @@
+services:
+  # ===========================================================================
+  # 1. MINIO (S3-Compatible Object Storage for Delta Lake)
+  # ===========================================================================
+  minio:
+    image: minio/minio:latest
+    container_name: minio_lakehouse
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadminpassword
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MinIO Bucket Auto-Creator
+  minio-init:
+    image: minio/mc:latest
+    container_name: minio_init_bucket
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc alias set myminio http://minio:9000 minioadmin minioadminpassword;
+      /usr/bin/mc mb --ignore-existing myminio/lakehouse-fraud;
+      /usr/bin/mc anonymous set public myminio/lakehouse-fraud;
+      echo 'Bucket lakehouse-fraud created successfully.';
+      "
+
+  # ===========================================================================
+  # 2. APACHE NIFI (ETL & Ingestion Layer)
+  # ===========================================================================
+  nifi:
+    image: apache/nifi:1.25.0
+    container_name: nifi_lakehouse
+    ports:
+      - "8443:8443"
+      - "8090:8080"
+    environment:
+      - NIFI_WEB_HTTP_PORT=8080
+      - SINGLE_USER_CREDENTIALS_USERNAME=admin
+      - SINGLE_USER_CREDENTIALS_PASSWORD=nifipassword123456
+
+  # ===========================================================================
+  # 3. APACHE KAFKA (KRaft Mode - Built-in Consensus without ZooKeeper)
+  # ===========================================================================
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: kafka_lakehouse
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:29093'
+      KAFKA_LISTENERS: 'PLAINTEXT://kafka:9092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:29092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.6.0
+    container_name: schema_registry_lakehouse
+    ports:
+      - "8081:8081"
+    depends_on:
+      - kafka
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka:9092
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+
+  # ===========================================================================
+  # 3. APACHE SPARK CLUSTER (Master & Worker Nodes)
+  # ===========================================================================
+  spark-master:
+    image: bitnami/spark:3.5.0
+    container_name: spark_master_lakehouse
+    working_dir: /app
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+    volumes:
+      - .:/app
+    environment:
+      - SPARK_MODE=master
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+
+  spark-worker:
+    image: bitnami/spark:3.5.0
+    container_name: spark_worker_lakehouse
+    working_dir: /app
+    ports:
+      - "8082:8081"
+    volumes:
+      - .:/app
+    depends_on:
+      - spark-master
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=2G
+      - SPARK_WORKER_CORES=2
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+
+  # ===========================================================================
+  # 4. MLFLOW (Model Registry & Experiment Tracking)
+  # ===========================================================================
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.10.2
+    container_name: mlflow_lakehouse
+    ports:
+      - "5000:5000"
+    command: >
+      mlflow server
+      --backend-store-uri sqlite:///mlflow.db
+      --default-artifact-root s3://lakehouse-fraud/mlflow/
+      --host 0.0.0.0
+      --port 5000
+    environment:
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+      AWS_ACCESS_KEY_ID: minioadmin
+      AWS_SECRET_ACCESS_KEY: minioadminpassword
+
+  # ===========================================================================
+  # 5. APACHE SUPERSET (Dashboard & Visualization Layer)
+  # ===========================================================================
+  superset:
+    image: apache/superset:3.0.2
+    container_name: superset_lakehouse
+    ports:
+      - "8088:8088"
+    environment:
+      SUPERSET_SECRET_KEY: "realtime_fraud_detection_lakehouse_secret_key"

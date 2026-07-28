@@ -1,0 +1,13 @@
+{
+  "phase": "Phase 3 - Stream Processing (Spark Structured Streaming)",
+  "kafka_bootstrap": "kafka:9092",
+  "kafka_topic": "creditcard-transactions",
+  "delta_sink_path": "s3a://lakehouse-fraud/streaming_processed",
+  "checkpoint_path": "s3a://lakehouse-fraud/checkpoints/streaming_processed",
+  "watermark_spec": "10 seconds on event_timestamp",
+  "window_spec": "Sliding 1 Minute Window (30s Slide)",
+  "output_mode": "append",
+  "duration_seconds": 34.76,
+  "status": "SUCCESS",
+  "timestamp": "2026-07-27T06:51:28.009265+00:00"
+}

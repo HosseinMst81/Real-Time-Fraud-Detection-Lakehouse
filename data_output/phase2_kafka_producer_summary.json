@@ -1,0 +1,13 @@
+{
+  "phase": "Phase 2 - Data Ingestion (Kafka Producer)",
+  "topic": "creditcard-transactions",
+  "target_tps": 10.0,
+  "bootstrap_servers": "kafka:9092",
+  "schema_registry_url": "http://schema-registry:8081",
+  "sent_records": 500,
+  "total_records": 500,
+  "duration_seconds": 50.0,
+  "actual_avg_tps": 10.0,
+  "timestamp": "2026-07-26T10:29:45.612931+00:00",
+  "status": "COMPLETED"
+}

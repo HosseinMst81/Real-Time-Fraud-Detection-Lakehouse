@@ -1,0 +1,14 @@
+# =============================================================================
+# Real-Time Fraud Detection Lakehouse Pipeline - Python Dependencies
+# =============================================================================
+
+pyspark==3.5.0
+delta-spark==3.1.0
+kafka-python==2.0.2
+confluent-kafka==2.3.0
+pandas==2.2.0
+numpy==1.26.4
+scikit-learn==1.4.0
+mlflow==2.10.2
+requests==2.31.0
+python-dotenv==1.0.1

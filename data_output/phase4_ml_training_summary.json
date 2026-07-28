@@ -1,0 +1,21 @@
+{
+  "phase": "Phase 4 - Machine Learning Model Training (Spark MLlib & MLflow)",
+  "model_type": "RandomForestClassifier",
+  "num_trees": 100,
+  "max_depth": 10,
+  "balancing_method": "Random Undersampling",
+  "raw_train_samples": 199364,
+  "balanced_train_samples": 662,
+  "metrics": {
+    "roc_auc": 0.9727,
+    "pr_auc": 0.4866,
+    "precision": 0.9981,
+    "recall": 0.9763,
+    "f1_score": 0.9865
+  },
+  "model_export_path": "s3a://lakehouse-fraud/models/rf_fraud_model",
+  "mlflow_registry_name": "FraudDetectionRandomForest",
+  "duration_seconds": 22.15,
+  "status": "SUCCESS",
+  "timestamp": "2026-07-28T06:53:56.993198+00:00"
+}
