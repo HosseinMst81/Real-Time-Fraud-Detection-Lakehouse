@@ -1,0 +1,21 @@
+{
+  "phase": "Phase 6 - Visualization & Direct Access Querying",
+  "delta_source": "s3a://lakehouse-fraud/streaming_processed",
+  "direct_access_enabled": true,
+  "total_records_queried": 14,
+  "widgets": [
+    "Widget 1: Legitimate vs Fraudulent Count Breakdown",
+    "Widget 2: Total Fraudulent Amount ($) KPI",
+    "Widget 3: End-to-End Processing Latency",
+    "Widget 4: Sliding Window Fraud Rate (%)"
+  ],
+  "mandatory_query": "SELECT\n        window_start,\n        COUNT(*) as total_transactions,\n        SUM(CASE WHEN prediction = 1 THEN 1 ELSE 0 END) as fraud_count,\n        AVG(Amount) as avg_amount\n    FROM transactions\n    GROUP BY window_start\n    ORDER BY window_start DESC\n    LIMIT 10",
+  "query_performance": {
+    "execution_engine": "Spark SQL on Delta Lake",
+    "storage_format": "Parquet with Delta Transaction Log",
+    "duration_seconds": 14.91,
+    "data_staleness": "0 seconds (Direct Access on Lakehouse)"
+  },
+  "status": "SUCCESS",
+  "timestamp": "2026-07-28T16:16:28.054899+00:00"
+}
