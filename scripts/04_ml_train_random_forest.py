@@ -53,6 +53,88 @@ from pyspark.ml.feature import VectorAssembler, StandardScaler
 from pyspark.ml.classification import RandomForestClassifier
 from pyspark.ml.evaluation import BinaryClassificationEvaluator, MulticlassClassificationEvaluator
 
+def log_to_mlflow_rest(mlflow_uri: str, params: dict, metrics: dict, model_path: str):
+    """
+    Direct REST API logger for MLflow Tracking Server.
+    Communicates via standard HTTP REST API, bypassing python mlflow SDK dependency issues.
+    """
+    import urllib.request
+    import urllib.error
+    
+    base_url = mlflow_uri.rstrip('/')
+    headers = {"Content-Type": "application/json"}
+    
+    def post(endpoint: str, data: dict):
+        url = f"{base_url}{endpoint}"
+        req = urllib.request.Request(
+            url,
+            data=json.dumps(data).encode('utf-8'),
+            headers=headers,
+            method='POST'
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                return json.loads(resp.read().decode('utf-8'))
+        except Exception as e:
+            return {"error": str(e)}
+
+    # 1. Get or Create Experiment
+    exp_name = "Credit_Card_Fraud_Detection_Lakehouse"
+    exp_res = post("/api/2.0/mlflow/experiments/get-by-name", {"experiment_name": exp_name})
+    exp_id = None
+    if "experiment" in exp_res and "experiment_id" in exp_res["experiment"]:
+        exp_id = exp_res["experiment"]["experiment_id"]
+    else:
+        create_exp = post("/api/2.0/mlflow/experiments/create", {"name": exp_name})
+        exp_id = create_exp.get("experiment_id")
+
+    if not exp_id:
+        print(f"[WARNING] MLflow REST API: Could not create or locate experiment '{exp_name}' at {mlflow_uri}")
+        return False
+
+    # 2. Create Run
+    now_ms = int(time.time() * 1000)
+    run_res = post("/api/2.0/mlflow/runs/create", {
+        "experiment_id": exp_id,
+        "start_time": now_ms,
+        "run_name": "Spark_MLlib_RandomForest_Undersampled",
+        "tags": [{"key": "mlflow.source.name", "value": "04_ml_train_random_forest.py"}]
+    })
+    run_info = run_res.get("run", {}).get("info", {})
+    run_id = run_info.get("run_id")
+    if not run_id:
+        print(f"[WARNING] MLflow REST API: Could not create run. Response: {run_res}")
+        return False
+
+    # 3. Log Parameters and Metrics
+    param_list = [{"key": str(k), "value": str(v)} for k, v in params.items()]
+    metric_list = [{"key": str(k), "value": float(v), "timestamp": now_ms, "step": 0} for k, v in metrics.items()]
+    
+    post("/api/2.0/mlflow/runs/log-batch", {
+        "run_id": run_id,
+        "params": param_list,
+        "metrics": metric_list
+    })
+
+    # 4. Finish Run
+    post("/api/2.0/mlflow/runs/update", {
+        "run_id": run_id,
+        "status": "FINISHED",
+        "end_time": int(time.time() * 1000)
+    })
+
+    # 5. Register Model in Model Registry
+    reg_name = "FraudDetectionRandomForest"
+    post("/api/2.0/mlflow/registered-models/create", {"name": reg_name})
+    post("/api/2.0/mlflow/model-versions/create", {
+        "name": reg_name,
+        "source": model_path,
+        "run_id": run_id
+    })
+
+    print(f"[SUCCESS] Registered Run and Model in MLflow UI via REST API! (Experiment ID: {exp_id}, Run ID: {run_id})")
+    return True
+
 def create_ml_spark_session(minio_endpoint: str = None, app_name: str = "FraudMLlibTraining") -> SparkSession:
     """
     Initialize Spark Session with MLlib, Delta Lake, Kafka integration, and MinIO S3A configs.
@@ -240,7 +322,15 @@ def train_and_register_fraud_model(
     model.write().overwrite().save(model_save_path)
     print("[SUCCESS] Model exported successfully.")
     
-    # Log run & register model in MLflow if connected
+    # Log run & register model in MLflow (SDK or REST API fallback)
+    metrics_dict = {
+        "roc_auc": round(roc_auc, 4),
+        "pr_auc": round(pr_auc, 4),
+        "precision": round(precision, 4),
+        "recall": round(recall, 4),
+        "f1_score": round(f1, 4)
+    }
+
     if mlflow_connected:
         try:
             with mlflow.start_run(run_name="Spark_MLlib_RandomForest_Undersampled"):
@@ -259,7 +349,11 @@ def train_and_register_fraud_model(
                 )
                 print("[SUCCESS] Model logged and registered in MLflow Model Registry as 'FraudDetectionRandomForest'")
         except Exception as ex:
-            print(f"[NOTE] MLflow model registration note: {ex}")
+            print(f"[NOTE] MLflow SDK note: {ex}. Falling back to REST API...")
+            log_to_mlflow_rest(mlflow_uri, rf_params, metrics_dict, model_save_path)
+    else:
+        print(f"[INFO] MLflow SDK unavailable. Attempting REST API logging to MLflow Server ({mlflow_uri})...")
+        log_to_mlflow_rest(mlflow_uri, rf_params, metrics_dict, model_save_path)
 
     total_time = time.time() - start_time
     

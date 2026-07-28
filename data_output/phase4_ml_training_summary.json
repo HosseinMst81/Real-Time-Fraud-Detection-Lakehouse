@@ -15,7 +15,7 @@
   },
   "model_export_path": "s3a://lakehouse-fraud/models/rf_fraud_model",
   "mlflow_registry_name": "FraudDetectionRandomForest",
-  "duration_seconds": 31.41,
+  "duration_seconds": 22.15,
   "status": "SUCCESS",
-  "timestamp": "2026-07-27T08:30:54.343856+00:00"
+  "timestamp": "2026-07-28T06:53:56.993198+00:00"
 }
