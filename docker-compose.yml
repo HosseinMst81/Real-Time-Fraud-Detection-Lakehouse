@@ -167,9 +167,6 @@ services:
     container_name: superset_lakehouse
     ports:
       - "8088:8088"
-    volumes:
-      - .:/app
     environment:
       SUPERSET_SECRET_KEY: "realtime_fraud_detection_lakehouse_secret_key"
-      SUPERSET_CONFIG_PATH: "/app/superset_config.py"
       PREVENT_UNSAFE_DB_CONNECTIONS: "False"
