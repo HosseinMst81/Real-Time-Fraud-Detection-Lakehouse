@@ -142,7 +142,25 @@ services:
       AWS_SECRET_ACCESS_KEY: minioadminpassword
 
   # ===========================================================================
-  # 5. APACHE SUPERSET (Dashboard & Visualization Layer)
+  # 5. POSTGRESQL DATABASE (Relational Analytics Engine for Superset)
+  # ===========================================================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres_lakehouse
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: fraud_lakehouse
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: adminpassword
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d fraud_lakehouse"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ===========================================================================
+  # 6. APACHE SUPERSET (Dashboard & Visualization Layer)
   # ===========================================================================
   superset:
     image: apache/superset:3.0.2
@@ -151,3 +169,4 @@ services:
       - "8088:8088"
     environment:
       SUPERSET_SECRET_KEY: "realtime_fraud_detection_lakehouse_secret_key"
+      PREVENT_UNSAFE_DB_CONNECTIONS: "False"
