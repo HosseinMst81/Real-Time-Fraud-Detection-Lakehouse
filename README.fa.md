@@ -14,6 +14,9 @@
 
 [📖 **نسخه‌ی فارسی**](./README.fa.md) | [📖 **English Version**](./README.md)
 
+داکیومنت کامل و جامع فارسی در سورس پروژه در دسترس است:  
+*Persian Documentaion.pdf*
+
 ---
 
 ## 📌 معرفی پروژه
