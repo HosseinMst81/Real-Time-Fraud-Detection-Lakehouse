@@ -1,4 +1,4 @@
-# 🏦 Real-Time Fraud Detection Lakehouse Pipeline
+# 🏦 پایپ‌لاین تشخیص تقلب برخط کارت‌های اعتباری با معماری Lakehouse
 
 [![Apache Spark](https://img.shields.io/badge/Apache%20Spark-3.5.0-E25A1C?style=for-the-badge&logo=apachespark&logoColor=white)](https://spark.apache.org/)
 [![Delta Lake](https://img.shields.io/badge/Delta%20Lake-3.1.0-00ADEE?style=for-the-badge&logo=delta&logoColor=white)](https://delta.io/)
@@ -12,25 +12,25 @@
 
 ---
 
-[📖 **Read this in Persian**](./README.fa.md) | [📖 **English Version**](./README.md)
+[📖 **نسخه‌ی فارسی**](./README.fa.md) | [📖 **English Version**](./README.md)
 
 ---
 
-## 📌 Overview
+## 📌 معرفی پروژه
 
-This project implements a **production-grade, end-to-end real-time fraud detection pipeline** built on a **Lakehouse architecture**. It unifies **streaming data ingestion**, **machine learning**, and **interactive analytics** on a single open platform using **Delta Lake**, **Apache Spark**, **Kafka**, and **MLflow**.
+این پروژه یک **سیستم تشخیص تقلب برخط (Real-Time) در مقیاس صنعتی** است که بر پایه‌ی **معماری Lakehouse** طراحی و پیاده‌سازی شده است. این سیستم با یکپارچه‌سازی **پردازش جریان داده (Streaming)**، **یادگیری ماشین** و **تحلیل تعاملی (Interactive Analytics)** بر روی یک پلتفرم باز و یکپارچه، امکان شناسایی تراکنش‌های مشکوک را در کسری از ثانیه فراهم می‌کند.
 
-> 🎯 **Key Achievement**: Achieved **~47% lower latency** compared to traditional two-tier architectures, while delivering **81% precision** and **86% recall** on a highly imbalanced credit card fraud dataset (fraud ratio: 0.172%).
+> 🎯 **دستاورد کلیدی**: کاهش **~۴۷ درصدی تأخیر (Latency)** نسبت به معماری‌های سنتی دو-لایه (Two-Tier)، همراه با دستیابی به **دقت (Precision) ۸۱٪** و **حساسیت (Recall) ۸۶٪** بر روی دیتاست بسیار نامتوازن (نسبت کلاهبرداری: ۰٫۱۷۲٪).
 
-Developed as the **final project** for the **Big Data Processing** graduate course at the University of Isfahan, this system is capable of ingesting thousands of transactions per second in real-time, applying intelligent ML-based fraud detection, and making results available for visualization with **zero data staleness** — all without complex ETL pipelines.
+این پروژه به‌عنوان **پروژه‌ی پایانی درس پردازش داده‌های عظیم (کارشناسی ارشد)** در دانشگاه اصفهان پیاده‌سازی شده است و قادر است هزاران تراکنش در ثانیه را به‌صورت بلادرنگ دریافت، پیش‌پردازش، تحلیل هوشمند (با مدل یادگیری ماشین) و ذخیره‌سازی کند و نتایج را بدون نیاز به پایپ‌لاین‌های پیچیده‌ی ETL در اختیار ابزارهای تحلیلی مانند Apache Superset قرار دهد.
 
 ---
 
-## 🏗️ Architecture & Data Flow
+## 🏗️ معماری سیستم و جریان داده
 
-The pipeline follows a **Stream-to-Lakehouse** pattern. All components are fully **containerized** and orchestrated via Docker Compose.
+معماری پایپ‌لاین بر اساس الگوی **Stream-to-Lakehouse** طراحی شده و تمامی اجزای آن به‌صورت **کانتینری (Containerized)** در محیط Docker اجرا می‌شوند.
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────────────────┐
 │                         REAL-TIME FRAUD DETECTION LAKEHOUSE PIPELINE                │
 ├─────────────────────────────────────────────────────────────────────────────────────┤
@@ -94,144 +94,108 @@ The pipeline follows a **Stream-to-Lakehouse** pattern. All components are fully
 
 ---
 
-## 🚀 Key Features
+## 🛠️ تکنولوژی‌ها و ابزارهای استفاده‌شده
 
-### 🧠 Machine Learning
-- **Random Forest Classifier** with 100 trees, max depth 10
-- **Cost-Sensitive Learning** (class weight = 290.0) to handle extreme class imbalance (0.172% fraud)
-- **MLflow integration** with dual logging (SDK + REST API fallback for reliability)
-- **Model Registry** for versioning and production deployment
-- **Real-time streaming inference** with fraud alerts published to Kafka
-
-### ⚡ Streaming Pipeline
-- **Apache Kafka** with KRaft mode (no ZooKeeper dependency)
-- **Spark Structured Streaming** with exactly-once semantics
-- **Watermark** (10 seconds) to prevent OOM and manage late-arriving data
-- **Sliding Window** (1-minute duration, 30-second slide) for real-time feature engineering
-- **Checkpointing** for fault tolerance and state recovery
-
-### 🏛️ Lakehouse Storage
-- **Delta Lake** on **MinIO** (S3-compatible object storage)
-- **ACID transactions** with automatic rollback on failure
-- **Time Travel** (versioned snapshots for audit and rollback)
-- **Schema Enforcement** and **Schema Evolution** (mergeSchema)
-- **Z-ORDER indexing** and **VACUUM** for query performance and storage optimization
-- **Direct Access** – query Delta Lake files directly via Spark SQL (no ETL required)
-
-### 📊 Visualization & Monitoring
-- **Apache Superset** dashboard with 4 key widgets:
-  1. **Legitimate vs Fraudulent Transactions per Minute** (Bar Chart)
-  2. **Total Fraudulent Amount ($)** – KPI Big Number with Trendline
-  3. **End-to-End Processing Latency Trends** (Line Chart)
-  4. **Sliding Window Fraud Rate (%)** (Area/Line Chart)
-- **Direct Access** – run Spark SQL queries directly on Delta Lake without intermediate databases
+| لایه کاربردی | ابزار / تکنولوژی | توضیحات |
+| :--- | :--- | :--- |
+| **ورود و پیام‌رسانی** | **Apache Kafka (حالت KRaft)** | پیام‌رسان توزیع‌شده برای دریافت و صف‌بندی جریان تراکنش‌ها |
+| **پردازش جریان** | **Apache Spark Structured Streaming** | موتور پردازش بلادرنگ با قابلیت Watermarking و پنجره‌های لغزان |
+| **ذخیره‌سازی Lakehouse** | **Delta Lake + MinIO (S3A)** | لایه ذخیره‌سازی شیءمحور با پشتیبانی از تراکنش‌های ACID و Time Travel |
+| **یادگیری ماشین** | **Spark MLlib و MLflow** | مدل Random Forest با راهکار Cost-Sensitive Learning برای رفع عدم‌توازن کلاس‌ها |
+| **ذخیره‌سازی رابطه‌ای** | **PostgreSQL 15** | دیتابیس رابطه‌ای برای همگام‌سازی داده‌ها و پاسخگویی به Superset |
+| **مصورسازی داده** | **Apache Superset** | داشبورد تحلیلی و کوئری‌گیری برخط با دسترسی مستقیم (Direct Access) |
+| **مدیریت کانتینرها** | **Docker & Docker Compose** | ارکستراسیون یکپارچه‌ی تمام کانتینرها |
 
 ---
 
-## 🛠️ Technology Stack
-
-| Layer | Technology | Version |
-|-------|------------|---------|
-| **Processing Engine** | Apache Spark | 3.5.0 |
-| **Storage Format** | Delta Lake | 3.1.0 |
-| **Streaming Bus** | Apache Kafka (KRaft) | 7.6.0 |
-| **Object Storage** | MinIO | Latest |
-| **Model Registry** | MLflow | 2.10.2 |
-| **Visualization** | Apache Superset | 3.0.2 |
-| **Relational Database** | PostgreSQL | 15-alpine |
-| **Orchestration** | Docker Compose | 3.8 |
-| **Language** | Python | 3.12+ |
-
----
-
-## 📁 Project Structure
+## 📁 ساختار پروژه
 
 ```
 Real-Time-Fraud-Detection-Lakehouse/
 ├── scripts/
-│   ├── 00_eda_and_preprocessing.py          # Phase 0: EDA, scaling & stratified split
-│   ├── 01_lakehouse_minio_delta.py          # Phase 1: Delta Lake setup on MinIO
-│   ├── 02_kafka_producer.py                 # Phase 2: Kafka streaming with configurable TPS
-│   ├── 03_spark_structured_streaming.py     # Phase 3: Watermark, window & sink to Delta
-│   ├── 04_ml_train_random_forest.py         # Phase 4: ML training & inference with MLflow
-│   ├── 05_evaluation_metrics.py             # Phase 5: Latency & ML benchmark comparison
-│   ├── 06_lakehouse_visualization.py        # Phase 6: Direct Access & query engine
-│   └── export_delta_to_postgres.py          # Sync Delta Lake to PostgreSQL for Superset
+│   ├── 00_eda_and_preprocessing.py          # فاز ۰: تحلیل و پیش‌پردازش
+│   ├── 01_lakehouse_minio_delta.py          # فاز ۱: راه‌اندازی Delta Lake روی MinIO
+│   ├── 02_kafka_producer.py                 # فاز ۲: تولید جریان داده در کافکا
+│   ├── 03_spark_structured_streaming.py     # فاز ۳: پردازش استریمینگ و پنجره‌بندی
+│   ├── 04_ml_train_random_forest.py         # فاز ۴: آموزش مدل و ثبت در MLflow
+│   ├── 05_evaluation_metrics.py             # فاز ۵: ارزیابی تأخیر و معیارهای ML
+│   ├── 06_lakehouse_visualization.py        # فاز ۶: دسترسی مستقیم و کوئری‌گیری
+│   └── export_delta_to_postgres.py          # همگام‌سازی Delta Lake به PostgreSQL
 ├── sql/
-│   ├── widget-01.sql                        # Superset chart queries
+│   ├── widget-01.sql                        # کوئری‌های ویجت‌های Superset
 │   ├── widget-02.sql
 │   ├── widget-03.sql
 │   └── widget-04.sql
-├── data_output/                             # Generated outputs (CSVs, JSON summaries)
-├── docker-compose.yml                       # Full container orchestration
-├── requirements.txt                         # Python dependencies
-├── superset_config.py                       # Superset custom configuration
+├── data_output/                             # خروجی‌های تولیدشده (CSV, JSON)
+├── docker-compose.yml                       # ارکستراسیون کامل کانتینرها
+├── requirements.txt                         # وابستگی‌های پایتون
+├── superset_config.py                       # تنظیمات اختصاصی Superset
 ├── .gitignore
 └── README.md
 ```
 
 ---
 
-## 📊 Performance Results
+## 📊 نتایج ارزیابی و مقایسه با مقاله Baseline
 
-### 1. Model Accuracy Metrics (vs. Baseline Paper)
+### ۱. معیارهای کیفی مدل یادگیری ماشین
 
-| Metric | Baseline Paper | Our Pipeline | Improvement |
-|--------|---------------|--------------|-------------|
-| **Precision** | 0.34 | **0.81** | **+138%** |
-| **Recall**   | 0.88 | **0.86** | Maintained high |
-| **F1-Score** | 0.49 | **0.83** | **+69%** |
-| **ROC-AUC**  | 0.94 | **0.96** | **+2%** |
+| معیار ارزیابی | مقاله پایه (Baseline) | پروژه ما (Lakehouse) | میزان بهبود |
+| :--- | :---: | :---: | :---: |
+| **دقت (Precision)** | **0.34** | **0.81** | **+۱۳۸٪** |
+| **حساسیت (Recall)** | **0.88** | **0.86** | حفظ نرخ بالا |
+| **نمره‌ی F1** | **0.49** | **0.83** | **+۶۹٪** |
+| **ROC-AUC** | **0.94** | **0.96** | **+۲٪** |
 
-> **Why the jump in Precision?** We used **Cost-Sensitive Learning** with a class weight of 290.0 (instead of artificial oversampling). This drastically reduced false positives while keeping recall high – a critical trade-off in fraud detection where false alarms are costly.
+> **دلیل جهش دقت (Precision):** استفاده از استراتژی **یادگیری هزینه‌محور (Cost-Sensitive Learning)** با وزن ۲۹۰٫۰ برای کلاس کلاهبرداری (به‌جای روش‌های مصنوعی Oversampling) باعث کاهش چشمگیر هشدارهای اشتباه (False Positives) شده است.
 
-### 2. End-to-End Latency Benchmarks
+### ۲. تأخیر پردازش سرتاسر (End-to-End Latency)
 
-| Throughput | Baseline Paper | Our Pipeline | Improvement |
-|------------|---------------|--------------|-------------|
-| **10 TPS** (normal load) | 0.80s | **0.42s** | **47.5% faster** |
-| **40 TPS** (peak load)   | 0.90s | **0.58s** | **35.6% faster** |
+| نرخ ورود داده | تأخیر مقاله پایه | تأخیر سیستم ما | بهبود کارایی |
+| :--- | :---: | :---: | :---: |
+| **۱۰ TPS (حالت عادی)** | ۰٫۸۰ ثانیه | **۰٫۴۲ ثانیه** | **۴۷٫۵٪ سریع‌تر** |
+| **۴۰ TPS (حالت پیک)** | ۰٫۹۰ ثانیه | **۰٫۵۸ ثانیه** | **۳۵٫۶٪ سریع‌تر** |
 
-> **Why faster?** Direct Access eliminates ETL bottlenecks, Delta Lake’s optimized Parquet format reduces I/O, and containerized Spark leverages better resource isolation.
+> **دلیل کاهش تأخیر:** حذف گلوگاه‌های ETL، استفاده از فرمت ستونی Parquet در Delta Lake، و اجرای کانتینری Spark با جداسازی بهینه‌ی منابع.
 
 ---
 
-## 🚀 Quick Start Guide
+## 🚀 راهنمای اجرای گام‌به‌گام
 
-### Prerequisites
-- Docker Desktop (or Docker Engine + Compose)
-- Python 3.12+ (for local development)
+### پیش‌نیازها
+- Docker Desktop (یا Docker Engine + Compose)
+- Python 3.12+
 - Git
 
-### 1. Clone & Setup
+### ۱. دریافت و نصب
 
 ```bash
-git clone https://github.com/yourusername/Real-Time-Fraud-Detection-Lakehouse.git
+git clone https://github.com/HosseinMst81/Real-Time-Fraud-Detection-Lakehouse.git
 cd Real-Time-Fraud-Detection-Lakehouse
 
-# Create virtual environment
+# ایجاد محیط مجازی
 python -m venv venv
-source venv/Scripts/activate      # Windows: venv\Scripts\activate
+source venv/Scripts/activate      # ویندوز: venv\Scripts\activate
 
-# Install dependencies (use mirror if needed)
+# نصب وابستگی‌ها (در صورت نیاز از میرور داخلی استفاده کنید)
 pip install -r requirements.txt -i https://pypi.iranrepo.ir/simple
 ```
 
-### 2. Launch All Services
+### ۲. راه‌اندازی سرویس‌ها
 
 ```bash
 docker compose up -d
 ```
 
-Verify all containers are running:
+بررسی وضعیت کانتینرها:
 ```bash
 docker compose ps
 ```
 
-**Service Access URLs:**
+**آدرس‌های دسترسی به سرویس‌ها:**
 
-| Service | URL | Credentials |
-|---------|-----|-------------|
+| سرویس | آدرس | نام کاربری / رمز |
+|-------|------|------------------|
 | **MinIO Console** | http://localhost:9001 | minioadmin / minioadminpassword |
 | **Spark Master UI** | http://localhost:8080 | - |
 | **Spark Worker UI** | http://localhost:8082 | - |
@@ -239,52 +203,51 @@ docker compose ps
 | **Schema Registry** | http://localhost:8081 | - |
 | **MLflow UI** | http://localhost:5000 | - |
 | **Apache Superset** | http://localhost:8088 | admin / admin |
-| **Apache NiFi** | https://localhost:8443 | admin / nifipassword123456 |
 | **PostgreSQL** | localhost:5432 | admin / adminpassword |
 
-### 3. Run the Pipeline (Step by Step)
+### ۳. اجرای پایپ‌لاین (مرحله به مرحله)
 
 ```bash
-# Phase 0: EDA & Preprocessing
+# فاز ۰: پیش‌پردازش و EDA
 docker exec -it spark_master_lakehouse spark-submit /app/scripts/00_eda_and_preprocessing.py
 
-# Phase 1: Delta Lake Setup on MinIO
+# فاز ۱: راه‌اندازی Delta Lake
 docker exec -it spark_master_lakehouse spark-submit \
   --packages io.delta:delta-spark_2.12:3.1.0,org.apache.hadoop:hadoop-aws:3.3.4,com.amazonaws:aws-java-sdk-bundle:1.12.262 \
   /app/scripts/01_lakehouse_minio_delta.py
 
-# Phase 2: Kafka Producer (10 TPS)
+# فاز ۲: تولید جریان داده در کافکا (۱۰ TPS)
 docker exec -it spark_master_lakehouse python3 /app/scripts/02_kafka_producer.py --tps 10 --max_records 1000
 
-# Phase 3: Spark Streaming (runs for 120 seconds, then stops)
+# فاز ۳: پردازش استریمینگ (۱۲۰ ثانیه)
 docker exec -it spark_master_lakehouse spark-submit \
   /app/scripts/03_spark_structured_streaming.py --stop_after 120
 
-# Phase 4: ML Training
+# فاز ۴: آموزش مدل
 docker exec -it spark_master_lakehouse spark-submit \
   /app/scripts/04_ml_train_random_forest.py --mode train
 
-# Phase 5: Evaluation
+# فاز ۵: ارزیابی عملکرد
 docker exec -it spark_master_lakehouse python3 /app/scripts/05_evaluation_metrics.py
 
-# Phase 6: Export to PostgreSQL & Visualize
+# فاز ۶: انتقال داده به PostgreSQL
 docker exec -it spark_master_lakehouse spark-submit \
   --packages io.delta:delta-spark_2.12:3.1.0,org.apache.hadoop:hadoop-aws:3.3.4,com.amazonaws:aws-java-sdk-bundle:1.12.262,org.postgresql:postgresql:42.6.0 \
   /app/scripts/export_delta_to_postgres.py
 
-# Phase 6: Direct Access Query Engine
+# فاز ۶: کوئری‌گیری مستقیم (Direct Access)
 docker exec -it spark_master_lakehouse spark-submit \
   /app/scripts/06_lakehouse_visualization.py
 ```
 
 ---
 
-## 🔍 Direct Access – The Lakehouse Promise
+## 🔍 دسترسی مستقیم (Direct Access) – وعده‌ی Lakehouse
 
-One of the key differentiators of this project is **Direct Access** – the ability to query Delta Lake files directly using Spark SQL without any ETL to a separate database.
+یکی از مهم‌ترین دستاوردهای این پروژه، **دسترسی مستقیم (Direct Access)** به داده‌های Delta Lake از طریق Spark SQL است، بدون نیاز به هیچ ETL یا دیتابیس واسط.
 
 ```sql
--- Query Delta Lake directly on MinIO
+-- کوئری مستقیم روی Delta Lake در MinIO
 SELECT
     window_start,
     COUNT(*) as total_transactions,
@@ -296,70 +259,61 @@ ORDER BY window_start DESC
 LIMIT 10;
 ```
 
-This eliminates **data staleness** (zero-lag analytics), reduces infrastructure complexity, and enables real-time decision-making.
+این قابلیت، **کهنگی داده (Data Staleness)** را به‌طور کامل حذف کرده و پیچیدگی زیرساخت را به‌شدت کاهش می‌دهد.
 
 ---
 
-## 🔧 Troubleshooting & Resolved Challenges
+## 🔧 چالش‌های حل‌شده در طول توسعه
 
-| Challenge | Solution |
-|-----------|----------|
-| **Bitnami Spark image unavailable** | Used legacy mirror `docker.xuanyuan.run/bitnamilegacy/spark` |
-| **Delta Lake JARs not found (`ClassNotFoundException`)** | Mounted JARs via `SPARK_EXTRA_JARS` and Docker volume |
-| **Superset `ModuleNotFoundError: No module named 'superset'`** | Removed `.:/app` volume that was overwriting core Superset files |
-| **PostgreSQL `column "amount" does not exist`** | Used case-sensitive quoting `"Amount"` and altered column types |
-| **OOM risk in streaming (State Store growth)** | Configured `withWatermark("event_timestamp", "10 seconds")` to drop old states |
-| **MLflow SDK version conflicts** | Implemented REST API fallback for model logging/registration |
-| **Py4J `ModuleNotFoundError` when running Python scripts** | Injected PySpark paths and `py4j-*.zip` into `sys.path` dynamically |
-
----
-
-## 📈 Pipeline Phases at a Glance
-
-| Phase | Script | Key Deliverable |
-|-------|--------|-----------------|
-| **0** | `00_eda_and_preprocessing.py` | Clean, scaled, stratified train/val/test splits |
-| **1** | `01_lakehouse_minio_delta.py` | Delta Lake table with ACID, Time Travel, Schema Enforcement |
-| **2** | `02_kafka_producer.py` | Real-time data stream at 10/40 TPS with wall-clock timestamps |
-| **3** | `03_spark_structured_streaming.py` | Windowed features (count, sum, avg) with watermark & checkpointing |
-| **4** | `04_ml_train_random_forest.py` | Trained Random Forest model logged in MLflow, real-time inference |
-| **5** | `05_evaluation_metrics.py` | Latency benchmarks & ML metric comparison vs. baseline |
-| **6** | `06_lakehouse_visualization.py` + `export_delta_to_postgres.py` | Superset dashboard + Direct Access SQL queries |
+| چالش | راه‌حل |
+|------|--------|
+| **تصویر Bitnami Spark در دسترس نبود** | استفاده از میرور `docker.xuanyuan.run/bitnamilegacy/spark` |
+| **JARهای Delta Lake پیدا نشد (`ClassNotFoundException`)** | نصب JARها از طریق `SPARK_EXTRA_JARS` و mount کردن آن‌ها |
+| **خطای `ModuleNotFoundError: No module named 'superset'` در Superset** | حذف volume `.:/app` که فایل‌های اصلی Superset را بازنویسی می‌کرد |
+| **خطای `column "amount" does not exist` در PostgreSQL** | استفاده از نام دقیق با کوتیشن `"Amount"` و تغییر نوع ستون‌ها |
+| **خطر OOM در استریمینگ (انباشت State)** | تنظیم `withWatermark("event_timestamp", "10 seconds")` برای پاکسازی خودکار |
+| **نسخه‌های ناسازگار MLflow SDK** | پیاده‌سازی Fallback از طریق REST API |
+| **خطای `No module named 'py4j'` در اجرای اسکریپت‌های Python** | افزودن پویای مسیرهای PySpark و `py4j-*.zip` به `sys.path` |
 
 ---
 
-## 📚 References
+## 📈 خلاصه‌ی فازهای پایپ‌لاین
 
-1. Armbrust, M., et al. (2020). "Delta Lake: High-Performance ACID Table Storage over Cloud Object Stores." *PVLDB*, 13(12).
-2. Armbrust, M., et al. (2018). "Structured Streaming: A Declarative API for Real-Time Applications in Apache Spark." *SIGMOD '18*.
-3. Behm, A., et al. (2022). "Photon: A Vectorized Query Engine for Lakehouse Workloads." *SIGMOD '22*.
-4. Dal Pozzolo, A., et al. (2015). "Calibrating Probability with Undersampling for Unbalanced Classification." *IEEE SSCI*.
-5. Carcillo, F., et al. (2018). "Scarff: A Scalable Framework for Streaming Credit Card Fraud Detection with Spark." *Information Systems*, 78.
+| فاز | اسکریپت | خروجی کلیدی |
+|-----|---------|-------------|
+| **۰** | `00_eda_and_preprocessing.py` | داده‌های تمیز، مقیاس‌شده و تقسیم‌بندی Stratified |
+| **۱** | `01_lakehouse_minio_delta.py` | جدول Delta Lake با قابلیت ACID، Time Travel، Schema Enforcement |
+| **۲** | `02_kafka_producer.py` | جریان داده‌ی بلادرنگ با نرخ ۱۰/۴۰ TPS و Timestamp واقعی |
+| **۳** | `03_spark_structured_streaming.py` | ویژگی‌های پنجره‌ای (تعداد، مجموع، میانگین) با Watermark و Checkpoint |
+| **۴** | `04_ml_train_random_forest.py` | مدل Random Forest آموزش‌دیده، ثبت‌شده در MLflow، و استنتاج بلادرنگ |
+| **۵** | `05_evaluation_metrics.py` | مقایسه‌ی تأخیر و معیارهای ML با مقاله‌ی Baseline |
+| **۶** | `06_lakehouse_visualization.py` + `export_delta_to_postgres.py` | داشبورد Superset + کوئری‌های Direct Access |
 
 ---
 
-## 👥 Contributors
+## 👥 مشارکت‌کنندگان
 
 **Supervisor:** Dr. Mohammad Ali Nematbakhsh, University of Isfahan
 
 ---
 
-## 📜 License
+## 📜 لایسنس
 
-Distributed under the **MIT License**. See the `LICENSE` file for more information.
+این پروژه تحت لایسنس **MIT** منتشر شده است. برای اطلاعات بیشتر، فایل `LICENSE` را مشاهده کنید.
 
 ---
 
-## 📬 Contact
+## 📬 ارتباط با ما
 
-For questions, issues, or collaboration:
+برای سوالات، گزارش مشکلات یا همکاری:
+
 - **Email:** hoss3inmostaj3ran@gmail.com | hobinazire@yahoo.com
 - **GitHub:** [@HosseinMst81](https://github.com/HosseinMst81)
 
 ---
 
 <div align="center">
-  <b>⭐ If this project helped you, please star the repository! ⭐</b>
+  <b>⭐ اگر این پروژه برای شما مفید بود، لطفاً به مخزن ستاره دهید! ⭐</b>
   <br><br>
-  <i>Built with ❤️ for the Big Data community</i>
+  <i>ساخته شده با ❤️ برای جامعه‌ی Big Data</i>
 </div>
